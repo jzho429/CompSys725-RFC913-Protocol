@@ -42,6 +42,8 @@ class TCPClient {
     }
     public void receiveFile(File file, long fileSize, boolean overwrite) throws Exception{
         try{
+            file.getParentFile().mkdirs();
+            file.createNewFile();
             FileOutputStream fileOutStream = new FileOutputStream(file, overwrite);
             BufferedOutputStream bufferedOutStream = new BufferedOutputStream(fileOutStream);
             for (int i=0; i<fileSize; i++){
@@ -102,20 +104,22 @@ class TCPClient {
                     outToServer.writeBytes(command + "\n");
                     System.out.println("Save file as: ");
                     String fileName = inFromUser.readLine();
-                    File file = new File(fileName);
+                    File file = new File(currentDir.toString() + "/" + fileName);
                     receiveFile(file, fileSize, true);
                     checkCommand();
                 }
                 else if (cmd.equals("STOR")){
                     outToServer.writeBytes(command + "\n");
-                    System.out.println("Enter file name: ");
+                    System.out.println("Enter new file name: ");
                     String fileName = inFromUser.readLine();
                     storFile = new File(currentDir.toString() + "/" + fileName);
                     System.out.println(storFile.toString());
                     try {
                         FileInputStream fileInStream = new FileInputStream(storFile);
-                        System.out.println("Size: " + fileInStream.available());
+                        BufferedInputStream bufferedInStream = new BufferedInputStream(fileInStream);
+                        System.out.println("Size: " + bufferedInStream.available());
                         fileInStream.close();
+                        bufferedInStream.close();
                     } catch (FileNotFoundException e) {
                         System.out.println("File not found");
                         checkCommand();
@@ -143,6 +147,7 @@ class TCPClient {
         }
         if (response.equalsIgnoreCase("+ok, waiting for file")) {
             sendFile(storFile);
+            System.out.println("Sending file");
         }
         if (response.charAt(0) == '-' || response.charAt(0) == '+' || response.charAt(0) == '!') {
             System.out.println(response);

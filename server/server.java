@@ -226,6 +226,7 @@ class TCPServer {
         }catch (IOException e){
             message = "-Failed";
         }
+        sendToClient(message);
     }
     
     private void NAME() throws Exception{
@@ -336,6 +337,7 @@ class TCPServer {
         if (mode.equalsIgnoreCase("NEW")){
             if (file.isFile()){
                 message = "-File exists, but system doesn't support generations";
+                return;
             }else{
                 message = "+File does not exist, will create new file";
             }
@@ -359,6 +361,7 @@ class TCPServer {
 
         if (SIZE()){
             long fileSize = Long.parseLong(args);
+            System.out.println(fileSize);
             try{
                 long availableSpace = Files.getFileStore(currentDir.toPath().toRealPath()).getUsableSpace();
                 if (fileSize > availableSpace){
@@ -374,6 +377,8 @@ class TCPServer {
             }
             sendToClient(message);
             try{
+                file.getParentFile().mkdirs();
+                file.createNewFile();
                 FileOutputStream fileOutStream = new FileOutputStream(file, overwrite);
                 BufferedOutputStream bufferedOutStream = new BufferedOutputStream(fileOutStream);
                 for (int i=0; i < fileSize; i++){
@@ -385,8 +390,8 @@ class TCPServer {
             }catch(IOException e){
                 message = "-Error saving file";
             }
-            sendToClient(message);
         }
+        sendToClient(message);
     }
 
     private boolean SIZE() throws Exception{
@@ -424,12 +429,11 @@ class TCPServer {
         }
         try{
             if (cmd != null){
-                if (cmd == "DONE"){
-                    System.out.println("done()");
-                    DONE();
-                    return;
-                }
                 switch(cmd){
+                    case "DONE":
+                    System.out.println("done()");
+                        DONE();
+                        break;
                     case "USER":
                         System.out.println("user()");
                         USER(args);
